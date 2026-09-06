@@ -4,12 +4,21 @@ import { BottomNav } from "@/components/ui/bottom-nav";
 import { auth } from "@/lib/auth/auth";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function MemberLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (e: any) {
+    if (e?.digest === "DYNAMIC_SERVER_USAGE") throw e;
+    console.error("MemberLayout auth error:", e);
+  }
+
   if (!session?.user) {
     redirect("/login");
   }

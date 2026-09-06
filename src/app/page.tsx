@@ -4,8 +4,16 @@ import { ArrowRight, Flame, Sparkles, LogIn } from "lucide-react";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { auth } from "@/lib/auth/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (err: any) {
+    if (err?.digest === "DYNAMIC_SERVER_USAGE") throw err;
+    console.error("Session fetch error on home page:", err);
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
