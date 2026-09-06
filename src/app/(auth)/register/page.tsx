@@ -21,34 +21,46 @@ export default function RegisterPage() {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+    const name = (formData.get("name") as string)?.trim();
     const email = (formData.get("email") as string)?.trim().toLowerCase();
     const password = formData.get("password") as string;
 
-    const res = await registerAction(formData);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    if (res.success) {
-      // Auto-login dan bawa terus ke menu profil baru
-      try {
-        const loginRes = await signIn("credentials", {
-          email,
-          password,
-          redirect: false,
-        });
+      const res = await response.json();
 
-        setLoading(false);
-        if (loginRes?.error) {
+      if (res.success) {
+        // Auto-login dan bawa terus ke menu profil baru
+        try {
+          const loginRes = await signIn("credentials", {
+            email,
+            password,
+            redirect: false,
+          });
+
+          setLoading(false);
+          if (loginRes?.error) {
+            router.push("/login?registered=true");
+          } else {
+            router.push("/profile?new=1");
+            router.refresh();
+          }
+        } catch {
+          setLoading(false);
           router.push("/login?registered=true");
-        } else {
-          router.push("/profile?new=1");
-          router.refresh();
         }
-      } catch {
+      } else {
         setLoading(false);
-        router.push("/login?registered=true");
+        setError(res.error || "Gagal mendaftar akaun.");
       }
-    } else {
+    } catch {
       setLoading(false);
-      setError(res.error || "Gagal mendaftar akaun.");
+      setError("Ralat rangkaian semasa berhubung dengan pelayan.");
     }
   }
 

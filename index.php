@@ -57,7 +57,7 @@ $body = file_get_contents('php://input');
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-if (!empty($body)) {
+if (!empty($body) || in_array($method, ['POST', 'PUT', 'PATCH'])) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
 }
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

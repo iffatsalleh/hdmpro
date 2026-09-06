@@ -113,27 +113,35 @@ function ProfileContent() {
     setSuccessMsg(null);
     setErrorMsg(null);
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("phone", phone);
-    formData.append("state", state);
-    formData.append("country", country);
-    if (imagePreview) {
-      formData.append("image", imagePreview);
-    }
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone,
+          state,
+          country,
+          image: imagePreview || undefined,
+        }),
+      });
 
-    const res = await updateProfileAction(formData);
-    setSubmitting(false);
+      const res = await response.json();
+      setSubmitting(false);
 
-    if (res.success) {
-      setSuccessMsg("Profil berjaya dikemas kini!");
-      if (isNewUser) {
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1200);
+      if (res.success) {
+        setSuccessMsg("Profil berjaya dikemas kini!");
+        if (isNewUser) {
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 1200);
+        }
+      } else {
+        setErrorMsg(res.error || "Gagal mengemas kini profil.");
       }
-    } else {
-      setErrorMsg(res.error || "Gagal mengemas kini profil.");
+    } catch {
+      setSubmitting(false);
+      setErrorMsg("Ralat rangkaian semasa mengemas kini profil.");
     }
   }
 
