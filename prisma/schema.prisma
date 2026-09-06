@@ -47,7 +47,7 @@ model User {
   name          String?
   email         String      @unique
   emailVerified DateTime?
-  image         String?     @db.Text
+  image         String?     @db.LongText
   password      String?
   role          Role        @default(MEMBER)
   status        UserStatus  @default(ACTIVE)
