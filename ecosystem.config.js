@@ -4,6 +4,9 @@ const path = require("path");
 const envVars = {
   PORT: 3000,
   NODE_ENV: "production",
+  AUTH_TRUST_HOST: "true",
+  NEXTAUTH_URL: "https://phpstack-1162221-6656605.cloudwaysapps.com",
+  AUTH_URL: "https://phpstack-1162221-6656605.cloudwaysapps.com",
 };
 
 const envPath = path.resolve(__dirname, ".env");

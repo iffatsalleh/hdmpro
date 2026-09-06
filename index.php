@@ -5,7 +5,23 @@ $uri = $_SERVER['REQUEST_URI'];
 $url = $backend . $uri;
 
 $method = $_SERVER['REQUEST_METHOD'];
-$headers = [];
+
+// Tentukan host tunggal yang tepat (elak duplicate header yang menyebabkan "Invalid URL" dalam NextAuth)
+$realHost = !empty($_SERVER['HTTP_X_FORWARDED_HOST']) ? $_SERVER['HTTP_X_FORWARDED_HOST'] : (!empty($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost');
+if (strpos($realHost, ',') !== false) {
+    $parts = explode(',', $realHost);
+    $realHost = trim($parts[0]);
+}
+
+// Tentukan protokol tunggal
+$proto = 'http';
+if (
+    (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+    (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && stripos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) ||
+    (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+) {
+    $proto = 'https';
+}
 
 $rawHeaders = function_exists('getallheaders') ? getallheaders() : [];
 if (empty($rawHeaders)) {
@@ -16,20 +32,21 @@ if (empty($rawHeaders)) {
     }
 }
 
+// Tapis keluar header yang berpotensi berganda
+$skipHeaders = ['host', 'content-length', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port'];
+$headers = [];
+
 foreach ($rawHeaders as $name => $value) {
-    if (strtolower($name) === 'host') {
-        $headers[] = "Host: 127.0.0.1:3000";
-    } elseif (strtolower($name) !== 'content-length') {
+    if (!in_array(strtolower($name), $skipHeaders)) {
         $headers[] = "$name: $value";
     }
 }
 
-if (isset($_SERVER['HTTP_HOST'])) {
-    $headers[] = "X-Forwarded-Host: " . $_SERVER['HTTP_HOST'];
-}
-$isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
-           (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-$headers[] = "X-Forwarded-Proto: " . ($isHttps ? 'https' : 'http');
+// Suntik header tunggal yang bersih ke Next.js
+$headers[] = "Host: " . $realHost;
+$headers[] = "X-Forwarded-Host: " . $realHost;
+$headers[] = "X-Forwarded-Proto: " . $proto;
+$headers[] = "X-Forwarded-Port: " . ($proto === 'https' ? '443' : '80');
 
 if (isset($_SERVER['CONTENT_TYPE'])) {
     $headers[] = "Content-Type: " . $_SERVER['CONTENT_TYPE'];
