@@ -8,5 +8,8 @@ npx prisma db push
 npm run build
 cp -r public .next/standalone/
 cp -r .next/static .next/standalone/.next/
-npx pm2 restart all
+cp .env .next/standalone/.env 2>/dev/null || true
+npx pm2 delete hdmpro 2>/dev/null || true
+npx pm2 start ecosystem.config.js
+npx pm2 save
 echo "=== Kemas Kini Selesai & Aplikasi Live! ==="
