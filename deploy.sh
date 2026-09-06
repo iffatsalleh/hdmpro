@@ -1,5 +1,6 @@
 #!/bin/bash
 echo "=== Memulakan Kemas Kini HDMPro ==="
+git config --global --add safe.directory "*"
 git pull origin main
 npm install
 npx prisma generate
