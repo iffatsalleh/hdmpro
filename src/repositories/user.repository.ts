@@ -34,6 +34,16 @@ export class UserRepository {
       },
     });
   }
+
+  async updateUser(
+    id: string,
+    data: { name?: string; image?: string; email?: string }
+  ): Promise<User> {
+    return prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
 }
 
 export const userRepository = new UserRepository();

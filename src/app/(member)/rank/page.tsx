@@ -16,19 +16,12 @@ export default async function RankPage() {
     rankData = null;
   }
 
-  // Fallback demo data if DB is not populated yet
-  if (!rankData || rankData.leaderboard.length === 0) {
+  if (!rankData) {
     rankData = {
-      totalXP: 2890,
-      badge: "HDM Warrior",
-      currentStreak: 8,
-      leaderboard: [
-        { rank: 1, name: "Razak H.", xp: 3450, streak: 24, badge: "HDM Elite", isCurrent: false },
-        { rank: 2, name: "Farah M.", xp: 3120, streak: 19, badge: "HDM Elite", isCurrent: false },
-        { rank: 3, name: "Anda (Ahmad)", xp: 2890, streak: 8, badge: "HDM Warrior", isCurrent: true },
-        { rank: 4, name: "Danial K.", xp: 2450, streak: 14, badge: "HDM Warrior", isCurrent: false },
-        { rank: 5, name: "Siti N.", xp: 2100, streak: 11, badge: "HDM Challenger", isCurrent: false },
-      ],
+      totalXP: 0,
+      badge: "Recruit",
+      currentStreak: 0,
+      leaderboard: [],
     };
   }
 
@@ -71,41 +64,51 @@ export default async function RankPage() {
           Papan Pendahulu Komuniti HDM
         </span>
 
-        <div className="flex flex-col gap-2">
-          {rankData.leaderboard.map((u: any) => (
-            <div
-              key={u.rank}
-              className={`flex items-center justify-between rounded-xl p-3 border transition-colors ${
-                u.isCurrent
-                  ? "bg-primary/10 border-primary/40"
-                  : "bg-secondary/50 border-border/50"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-6 w-6 items-center justify-center text-xs font-bold text-muted-foreground">
-                  {u.rank === 1 ? (
-                    <Medal className="h-4 w-4 text-warning" />
-                  ) : u.rank === 2 ? (
-                    <Medal className="h-4 w-4 text-slate-300" />
-                  ) : (
-                    `#${u.rank}`
-                  )}
-                </span>
-                <div>
-                  <p className={`text-xs font-semibold ${u.isCurrent ? "text-primary" : "text-foreground"}`}>
-                    {u.name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">{u.badge}</p>
+        {rankData.leaderboard.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {rankData.leaderboard.map((u: any) => (
+              <div
+                key={u.rank}
+                className={`flex items-center justify-between rounded-xl p-3 border transition-colors ${
+                  u.isCurrent
+                    ? "bg-primary/10 border-primary/40"
+                    : "bg-secondary/50 border-border/50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-6 w-6 items-center justify-center text-xs font-bold text-muted-foreground">
+                    {u.rank === 1 ? (
+                      <Medal className="h-4 w-4 text-warning" />
+                    ) : u.rank === 2 ? (
+                      <Medal className="h-4 w-4 text-slate-300" />
+                    ) : (
+                      `#${u.rank}`
+                    )}
+                  </span>
+                  <div>
+                    <p className={`text-xs font-semibold ${u.isCurrent ? "text-primary" : "text-foreground"}`}>
+                      {u.name}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{u.badge}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                  <Zap className="h-3.5 w-3.5 text-warning" />
+                  <span>{u.xp.toLocaleString()} XP</span>
                 </div>
               </div>
-
-              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                <Zap className="h-3.5 w-3.5 text-warning" />
-                <span>{u.xp.toLocaleString()} XP</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-8 text-center rounded-xl bg-secondary/30 border border-dashed border-border/80 gap-2">
+            <Trophy className="h-8 w-8 text-muted-foreground/50" />
+            <p className="text-xs font-semibold text-foreground">Papan Pendahulu Belum Bermula</p>
+            <p className="text-[11px] text-muted-foreground max-w-xs">
+              Kumpul mata XP pertama anda dengan merekod makanan, menimbang berat, atau menamatkan modul HDM!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

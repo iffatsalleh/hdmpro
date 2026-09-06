@@ -47,7 +47,7 @@ model User {
   name          String?
   email         String      @unique
   emailVerified DateTime?
-  image         String?
+  image         String?     @db.Text
   password      String?
   role          Role        @default(MEMBER)
   status        UserStatus  @default(ACTIVE)
@@ -117,6 +117,9 @@ model UserProfile {
   calorieTarget       Int?      @default(2000)
   proteinTarget       Int?      @default(150)
   timezone            String    @default("Asia/Kuala_Lumpur")
+  phone               String?
+  state               String?
+  country             String?   @default("Malaysia")
   onboardingCompleted Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt

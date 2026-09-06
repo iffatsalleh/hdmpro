@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { registerAction } from "@/app/actions/auth";
+import { signIn } from "next-auth/react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -20,12 +21,33 @@ export default function RegisterPage() {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+    const email = (formData.get("email") as string)?.trim().toLowerCase();
+    const password = formData.get("password") as string;
+
     const res = await registerAction(formData);
 
-    setLoading(false);
     if (res.success) {
-      router.push("/login?registered=true");
+      // Auto-login dan bawa terus ke menu profil baru
+      try {
+        const loginRes = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+
+        setLoading(false);
+        if (loginRes?.error) {
+          router.push("/login?registered=true");
+        } else {
+          router.push("/profile?new=1");
+          router.refresh();
+        }
+      } catch {
+        setLoading(false);
+        router.push("/login?registered=true");
+      }
     } else {
+      setLoading(false);
       setError(res.error || "Gagal mendaftar akaun.");
     }
   }
