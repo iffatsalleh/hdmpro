@@ -11,39 +11,48 @@ const loginSchema = z.object({
   password: z.string().min(6),
 });
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    // 1. Google OAuth (Gmail)
+const providers: any[] = [
+  // 1. Manual Email & Password
+  Credentials({
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    authorize: async (credentials) => {
+      const parsed = loginSchema.safeParse(credentials);
+      if (!parsed.success) return null;
+
+      const user = await userRepository.findByEmail(parsed.data.email);
+      if (!user || !user.password) return null;
+
+      const passwordsMatch = await bcrypt.compare(parsed.data.password, user.password);
+      if (!passwordsMatch) return null;
+
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      };
+    },
+  }),
+];
+
+// 2. Google OAuth (Hanya jika GOOGLE_CLIENT_ID & SECRET diisi di persekitaran pelayan)
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.unshift(
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-    }),
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+}
 
-    // 2. Manual Email & Password
-    Credentials({
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      authorize: async (credentials) => {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
-
-        const user = await userRepository.findByEmail(parsed.data.email);
-        if (!user || !user.password) return null;
-
-        const passwordsMatch = await bcrypt.compare(parsed.data.password, user.password);
-        if (!passwordsMatch) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
-      },
-    }),
-  ],
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "f68a78627b4b1db3c19e59178ad0b8b584736fdf5c76dbfb2215c13e51240ffb",
+  providers,
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google" && user.email) {
@@ -103,6 +112,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   pages: {
     signIn: "/login",
+    error: "/login",
   },
   session: {
     strategy: "jwt",

@@ -14,9 +14,21 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
+  const authError = searchParams.get("error");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  let displayError = error;
+  if (!displayError && authError) {
+    if (authError === "Configuration") {
+      displayError = "Konfigurasi Google Sign-In belum lengkap di pelayan (Google Client ID & Secret diperlukan).";
+    } else if (authError === "OAuthSignin" || authError === "OAuthCallbackError") {
+      displayError = "Gagal menyambung ke akaun Google. Sila gunakan pendaftaran emel atau cuba lagi.";
+    } else {
+      displayError = "Terdapat ralat semasa memproses log masuk. Sila cuba lagi.";
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -65,9 +77,9 @@ function LoginForm() {
         </div>
       )}
 
-      {error && (
+      {displayError && (
         <div className="rounded-xl bg-danger/10 p-3 text-xs text-danger border border-danger/20">
-          {error}
+          {displayError}
         </div>
       )}
 
