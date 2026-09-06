@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* HDMPro Dark & Sleek Premium Theme Tokens */
+  --background: #090b0e;
+  --foreground: #f3f4f6;
+  
+  --card: #11141a;
+  --card-foreground: #ffffff;
+  
+  --primary: #e63946;
+  --primary-foreground: #ffffff;
+  --primary-hover: #d62839;
+  
+  --secondary: #1a1f29;
+  --secondary-foreground: #9ca3af;
+  
+  --muted: #1e2430;
+  --muted-foreground: #94a3b8;
+  
+  --border: #232936;
+  --input: #1a1f29;
+  --ring: #e63946;
+  
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Mobile Safe Area Optimization */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 16px);
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}

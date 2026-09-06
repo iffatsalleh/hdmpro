@@ -1,0 +1,323 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  MEMBER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum LogSource {
+  AI
+  MANUAL
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+  DRINK
+  OTHER
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  PAST_DUE
+  UNPAID
+}
+
+model User {
+  id            String      @id @default(cuid())
+  name          String?
+  email         String      @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role        @default(MEMBER)
+  status        UserStatus  @default(ACTIVE)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  profile       UserProfile?
+  dietLogs      DietLog[]
+  weightLogs    WeightLog[]
+  measurements  MeasurementLog[]
+  xpLedger      XPTransaction[]
+  streak        Streak?
+  lessonProgress LessonProgress[]
+  subscription  Subscription?
+  conversations Conversation[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserProfile {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  gender              String?
+  age                 Int?
+  height              Float?
+  startingWeight      Float?
+  currentWeight       Float?
+  targetWeight        Float?
+  targetDate          DateTime?
+  activityLevel       String?
+  dietGoal            String?
+  calorieTarget       Int?      @default(2000)
+  proteinTarget       Int?      @default(150)
+  timezone            String    @default("Asia/Kuala_Lumpur")
+  onboardingCompleted Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DietLog {
+  id            String         @id @default(cuid())
+  userId        String
+  date          DateTime       @default(now())
+  mealType      MealType       @default(OTHER)
+  description   String
+  calories      Int            @default(0)
+  protein       Float          @default(0)
+  carbohydrates Float          @default(0)
+  fat           Float          @default(0)
+  notes         String?
+  source        LogSource      @default(MANUAL)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  items         DietMealItem[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+model DietMealItem {
+  id        String   @id @default(cuid())
+  dietLogId String
+  name      String
+  portion   String?
+  calories  Int      @default(0)
+  protein   Float    @default(0)
+  carbs     Float    @default(0)
+  fat       Float    @default(0)
+  createdAt DateTime @default(now())
+
+  dietLog   DietLog  @relation(fields: [dietLogId], references: [id], onDelete: Cascade)
+}
+
+model WeightLog {
+  id        String    @id @default(cuid())
+  userId    String
+  weight    Float
+  date      DateTime  @default(now())
+  time      String?
+  notes     String?
+  source    LogSource @default(MANUAL)
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+model MeasurementLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @default(now())
+  waist     Float?
+  chest     Float?
+  arm       Float?
+  thigh     Float?
+  bodyFat   Float?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+model XPTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int
+  type        String
+  referenceId String?
+  description String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Streak {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
+  lastActivityDate DateTime?
+  updatedAt        DateTime  @updatedAt
+
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Module {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  description String?
+  thumbnail   String?
+  order       Int       @default(0)
+  status      String    @default("DRAFT")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id          String           @id @default(cuid())
+  moduleId    String
+  title       String
+  slug        String
+  content     String?          @db.Text
+  videoUrl    String?
+  order       Int              @default(0)
+  duration    Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  module      Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress    LessonProgress[]
+
+  @@unique([moduleId, slug])
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model KnowledgeDocument {
+  id        String           @id @default(cuid())
+  title     String
+  category  String
+  content   String           @db.Text
+  source    String?
+  status    String           @default("PUBLISHED")
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  chunks    KnowledgeChunk[]
+}
+
+model KnowledgeChunk {
+  id         String            @id @default(cuid())
+  documentId String
+  content    String            @db.Text
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  status               SubscriptionStatus @default(INCOMPLETE)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String    @default("Chat with Coach")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  messages  Message[]
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           String
+  content        String       @db.Text
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
